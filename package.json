@@ -1,0 +1,11 @@
+{
+  "name": "bunbetsu-beat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "author": "たぬ",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  }
+}

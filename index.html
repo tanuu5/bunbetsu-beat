@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#1B2438">
+  <meta name="description" content="流れてくるゴミを、音楽のリズムに合わせて 4 方向のゴミ箱へ投げ分けるミニゲーム">
+  <title>ぶんべつビート</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231B2438'/%3E%3Ccircle cx='32' cy='34' r='20' fill='%23F4F6F8'/%3E%3Crect x='18' y='26' width='28' height='16' rx='6' fill='%2310233A'/%3E%3Ccircle cx='26' cy='34' r='3' fill='%237FE3FF'/%3E%3Ccircle cx='38' cy='34' r='3' fill='%237FE3FF'/%3E%3Ccircle cx='32' cy='9' r='4' fill='%234FC3F7'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="gl"></canvas>
+
+    <div id="hud" hidden>
+      <div class="hud-left">
+        <div id="score" class="num">0</div>
+        <div id="combo"></div>
+      </div>
+      <div class="hud-center">
+        <div id="gauge" role="meter" aria-valuemin="0" aria-valuemax="100"><div id="gauge-fill"></div></div>
+      </div>
+      <button id="pause-btn" class="icon-btn" aria-label="いちじていし">Ⅱ</button>
+    </div>
+
+    <div id="face-window" hidden><canvas id="face-canvas" width="112" height="112"></canvas></div>
+    <div id="labels"></div>
+    <div id="judge-pop" class="judge"></div>
+    <div id="banner"></div>
+    <pre id="debug" hidden></pre>
+
+    <!-- タイトル -->
+    <section id="title" class="overlay title-overlay">
+      <h1 data-t="title"></h1>
+      <div id="diff-select" class="row" role="radiogroup"></div>
+      <p id="title-record" class="record num"></p>
+      <button id="start-btn" class="big-btn" data-t="start"></button>
+      <div class="row">
+        <button id="howto-btn" class="btn small-btn" data-t="howto"></button>
+        <button id="settings-btn" class="btn small-btn" data-t="settingsTitle"></button>
+      </div>
+      <p class="hint" data-t="keyHint"></p>
+      <p class="small" data-t="muteHint"></p>
+      <p class="small" data-t="localRule"></p>
+    </section>
+
+    <!-- あそびかた（3 枚の絵） -->
+    <section id="howto" class="overlay" hidden>
+      <h2 data-t="howto"></h2>
+      <div class="howto-cards">
+        <figure class="howto-card">
+          <svg viewBox="0 0 160 120" aria-hidden="true">
+            <path d="M62 8 H98 L128 108 H32 Z" fill="#3D4A5C"/>
+            <path d="M58 28 H102 M52 50 H108 M45 74 H115 M38 98 H122" stroke="#5A6B82" stroke-width="4"/>
+            <rect x="72" y="14" width="16" height="12" rx="3" fill="#F2B630"/>
+            <circle cx="80" cy="46" r="9" fill="#E8553D"/>
+            <path d="M80 60 v14 m-6 -6 l6 6 l6 -6" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <rect x="34" y="82" width="92" height="4" rx="2" fill="#FFFFFF"/>
+            <circle cx="80" cy="104" r="12" fill="#F4F6F8"/>
+            <rect x="72" y="90" width="16" height="6" rx="3" fill="#4FC3F7"/>
+          </svg>
+          <figcaption><b>1</b><span data-t="howto1"></span></figcaption>
+        </figure>
+        <figure class="howto-card">
+          <svg viewBox="0 0 160 120" aria-hidden="true">
+            <rect x="8" y="46" width="30" height="28" rx="5" fill="#E8553D"/>
+            <path d="M23 52 c6 6 7 11 3 16 c-4 3 -10 0 -9 -6 c1 -4 4 -5 6 -10z" fill="#FFFFFF"/>
+            <rect x="122" y="46" width="30" height="28" rx="5" fill="#F2B630"/>
+            <text x="137" y="65" font-size="11" font-weight="800" fill="#FFFFFF" text-anchor="middle">プラ</text>
+            <rect x="65" y="4" width="30" height="24" rx="5" fill="#27AE60"/>
+            <path d="M78 8 h4 v4 q5 2 5 6 v7 h-14 v-7 q0 -4 5 -6z" fill="#FFFFFF"/>
+            <rect x="65" y="92" width="30" height="24" rx="5" fill="#2F80ED"/>
+            <rect x="74" y="97" width="12" height="15" rx="3" fill="#FFFFFF"/>
+            <rect x="72" y="52" width="16" height="16" rx="4" fill="#D9DEE6"/>
+            <g stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M66 60 H44 m6 -6 l-6 6 l6 6"/>
+              <path d="M94 60 H116 m-6 -6 l6 6 l-6 6"/>
+              <path d="M80 46 V34 m-6 6 l6 -6 l6 6"/>
+              <path d="M80 74 V86 m-6 -6 l6 6 l6 -6"/>
+            </g>
+          </svg>
+          <figcaption><b>2</b><span data-t="howto2"></span></figcaption>
+        </figure>
+        <figure class="howto-card">
+          <svg viewBox="0 0 160 120" aria-hidden="true">
+            <rect x="20" y="78" width="120" height="6" rx="3" fill="#FFFFFF"/>
+            <rect x="70" y="58" width="20" height="20" rx="4" fill="#E8553D"/>
+            <text x="80" y="42" font-size="16" font-weight="800" fill="#FFD54A" text-anchor="middle">PERFECT!</text>
+            <text x="8" y="30" font-size="20" fill="#7FE3FF">♪</text>
+            <text x="138" y="24" font-size="16" fill="#7FE3FF">♪</text>
+            <g fill="#FFFFFF" opacity="0.8">
+              <circle cx="40" cy="104" r="5"/><circle cx="66" cy="104" r="5"/><circle cx="94" cy="104" r="5"/><circle cx="120" cy="104" r="5"/>
+            </g>
+            <circle cx="66" cy="104" r="9" fill="none" stroke="#FFD54A" stroke-width="3"/>
+          </svg>
+          <figcaption><b>3</b><span data-t="howto3"></span></figcaption>
+        </figure>
+      </div>
+      <p class="hint" data-t="howtoKeep"></p>
+      <p class="small" data-t="tapToClose"></p>
+    </section>
+
+    <!-- せってい -->
+    <section id="settings" class="overlay" hidden>
+      <h2 data-t="settingsTitle"></h2>
+      <div id="settings-slot"></div>
+      <button id="settings-close" class="big-btn" data-t="back"></button>
+    </section>
+
+    <!-- いちじていし -->
+    <section id="pause" class="overlay" hidden>
+      <h2 data-t="pause"></h2>
+      <button id="resume-btn" class="big-btn" data-t="resume"></button>
+      <button id="retry-btn" class="btn" data-t="retry"></button>
+      <button id="title-btn" class="btn" data-t="toTitle"></button>
+      <div id="pause-slot">
+        <!-- 設定の部品。一時停止と「せってい」の画面で使い回す -->
+        <div id="settings-panel" class="settings-panel">
+          <label><span data-t="settings.musicVolume"></span><input id="vol-music" type="range" min="0" max="1" step="0.05"></label>
+          <label><span data-t="settings.sfxVolume"></span><input id="vol-sfx" type="range" min="0" max="1" step="0.05"></label>
+          <div class="offset-row">
+            <span data-t="settings.timingOffset"></span>
+            <button id="offset-minus" class="icon-btn" aria-label="−5">−</button>
+            <output id="offset-val" class="num">0 ms</output>
+            <button id="offset-plus" class="icon-btn" aria-label="+5">＋</button>
+          </div>
+          <p class="small" data-t="settings.timingHint"></p>
+          <label class="check"><input id="opt-vibration" type="checkbox"><span data-t="settings.vibration"></span></label>
+          <label class="check"><input id="opt-reduce" type="checkbox"><span data-t="settings.reduceMotion"></span></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- けっか -->
+    <section id="result" class="overlay" hidden>
+      <h2 id="result-head"></h2>
+      <div id="result-rank" class="rank"></div>
+      <p id="result-title" class="result-title"></p>
+      <p id="result-record" class="result-record"></p>
+      <dl id="result-stats"></dl>
+      <p id="result-comment" class="result-comment"></p>
+      <button id="again-btn" class="big-btn" data-t="again"></button>
+      <div class="row">
+        <button id="result-title-btn" class="btn small-btn" data-t="toTitle"></button>
+        <button id="share-btn" class="btn small-btn" data-t="share"></button>
+      </div>
+      <p class="small" data-t="localRule"></p>
+    </section>
+
+    <section id="fatal" class="overlay" hidden><p id="fatal-msg"></p></section>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
