@@ -206,6 +206,8 @@ function popJudge(kind) {
 
 function vibrate(ms) {
   if (!data.settings.vibration || opts.auto) return;
+  // ユーザーがまだ一度も操作していないと、ブラウザが呼び出しを止めてコンソールにエラーを出すので呼ばない
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
   if (typeof navigator.vibrate === 'function') navigator.vibrate(ms);
 }
 
@@ -525,7 +527,9 @@ view.renderer.setAnimationLoop(() => {
   let low = false;
 
   if (game) {
-    songTime = mode === 'ending' ? game.freezeAt : conductor.songTimeAt(now);
+    // ゲームオーバーのあとは、ベルトの上の世界の時刻を止める（ゴミの排出・ゴミ箱・仲間の登場が止まる）
+    const frozen = game.ended && game.endReason === 'gameover';
+    songTime = frozen ? game.freezeAt : conductor.songTimeAt(now);
     if (!Number.isFinite(songTime)) songTime = game.startBeat * game.chart.spb - 1;
     if (mode === 'ending' && now >= game.endAt) showResult();
     if (mode === 'play') {
@@ -563,7 +567,8 @@ view.renderer.setAnimationLoop(() => {
   }
 
   // 終了の演出のあいだは、ゴミは止めてロボットとゴミ箱だけ動かす
-  const animTime = !game ? now / 1000 : mode === 'ending' ? game.freezeAt + (now - game.endStart) / 1000 : songTime;
+  // ゲームオーバーのあとも、ソータと仲間の身ぶりは動かし続ける
+  const animTime = !game ? now / 1000 : game.ended && game.endReason === 'gameover' ? game.freezeAt + (now - game.endStart) / 1000 : songTime;
   const rm = reduceMotion();
   feverAmount += ((fever ? 1 : 0) - feverAmount) * Math.min(1, (dt / 1000) * 2);
   const expr = mode === 'play' || mode === 'paused' || mode === 'resuming' || mode === 'ending' ? faceState.get(animTime, { fever, low }) : 'smile';
@@ -575,10 +580,10 @@ view.renderer.setAnimationLoop(() => {
     scan: game ? itemsView.scanPhase(songTime) : -1,
     reduceMotion: rm,
   });
-  bins.update(animTime, beatPulse);
+  bins.update(game ? songTime : animTime, beatPulse);
   robot.update(animTime, { beat, pulse: beatPulse, fever, expr, reduceMotion: rm });
   effects.update(animTime, { fever, reduceMotion: rm });
-  crowd.update(animTime, { beat, pulse: beatPulse, fever, ending: !!game && beat >= game.endingBeat, reduceMotion: rm });
+  crowd.update(animTime, { worldTime: game ? songTime : animTime, beat, pulse: beatPulse, fever, ending: !!game && beat >= game.endingBeat, reduceMotion: rm });
   view.render();
   // 小窓の顔：変わったとき、動く表情なら 1 秒に 20 回まで描き直す
   if (expr !== faceWindowExpr || Math.abs(animTime - faceWindowAt) > 0.05) {

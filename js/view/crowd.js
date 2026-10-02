@@ -149,12 +149,13 @@ export function createCrowd(scene, faceTexture) {
     },
 
     /**
-     * @param {number} now 曲の時刻（結果・タイトルでは動きの時刻）
-     * @param {{ beat: number, pulse: number, fever: boolean, ending: boolean, reduceMotion: boolean }} s
+     * @param {number} now 動きの時刻
+     * @param {{ worldTime: number, beat: number, pulse: number, fever: boolean, ending: boolean, reduceMotion: boolean }} s
+     *   worldTime は登場を決める曲の時刻（ゲームオーバーのあとは止まる）
      */
     update(now, s) {
       bots.forEach((b, i) => {
-        const a = now - b.arriveAt;
+        const a = s.worldTime - b.arriveAt;
         if (mode === 'hidden' || !(a >= 0)) {
           hide(i);
           return;
