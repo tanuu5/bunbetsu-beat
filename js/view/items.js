@@ -150,6 +150,14 @@ export function createItems(scene, hooks = {}) {
   }
 
   return {
+    /** ベルトの上のゴミをすべて片づける（タイトルに戻ったとき）。 */
+    clear() {
+      for (const v of vis) release(v);
+      items = [];
+      vis = [];
+      first = 0;
+    },
+
     /**
      * 譜面を差しかえる。
      * @param {{ gateSec: number, assist: (item: any) => boolean }} opts

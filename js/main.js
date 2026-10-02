@@ -378,6 +378,7 @@ function toTitle() {
   robot.setMode('title');
   crowd.setMode('hidden');
   effects.clear();
+  itemsView.clear(); // タイトルではベルトだけを流す。前のゲームのゴミを残さない
   for (const type of BIN_TYPES) bins.setAppearTime(type, -Infinity);
   ui.beginLabels();
   ui.endLabels();
